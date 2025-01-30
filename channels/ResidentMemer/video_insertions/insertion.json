@@ -1,0 +1,13 @@
+{
+  "channel": "ResidentMemer",
+  "bucket_name": "videos-grace",
+  "folders": ["interestingasfuck"],
+  "client_secret_file": "channels/ResidentMemer/client_secret.json",
+  "credentials_file": "channels/ResidentMemer/youtube_credentials.json",
+  "metadata_key": "uploaded/metadata.json",
+  "uploaded_folder": "uploaded/videos/",
+  "privacy_status": "private",
+  "category_id": 15,
+  "upload_time": "10:00",
+  "upload_delay_days": "3"
+}
