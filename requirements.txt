@@ -1,5 +1,6 @@
-boto3
-google-api-python-client
-google-auth
-google-auth-oauthlib
-python-dotenv
+boto3~=1.26.0
+botocore~=1.29.0
+google-api-python-client~=2.94.0
+google-auth~=2.14.0
+google-auth-oauthlib~=0.7.1
+python-dotenv~=1.0.1
