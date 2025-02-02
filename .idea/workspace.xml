@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6c621c7a-639e-46e4-86a6-3ae672c4e30a" name="Changes" comment="Requirements update 3" />
+    <list default="true" id="6c621c7a-639e-46e4-86a6-3ae672c4e30a" name="Changes" comment="Requirements update 4">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -128,7 +131,15 @@
       <option name="project" value="LOCAL" />
       <updated>1738234249690</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Requirements update 4">
+      <option name="closed" value="true" />
+      <created>1738234494587</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1738234494587</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -137,6 +148,7 @@
     <MESSAGE value="Requirements update" />
     <MESSAGE value="Requirements update 2" />
     <MESSAGE value="Requirements update 3" />
-    <option name="LAST_COMMIT_MESSAGE" value="Requirements update 3" />
+    <MESSAGE value="Requirements update 4" />
+    <option name="LAST_COMMIT_MESSAGE" value="Requirements update 4" />
   </component>
 </project>

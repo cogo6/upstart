@@ -135,7 +135,7 @@ def upload_to_youtube(video_path, metadata, config):
     # Prepare snippet from metadata
     title = metadata.get("ytitle") or metadata.get("title") or "Vid"
     tags = metadata.get("tags", [])
-    description = metadata.get("summary", "description")
+    description = metadata.get("title", "description")
 
     request_body = {
         "snippet": {
@@ -339,6 +339,8 @@ def main(config_file):
     """
     Main workflow for processing and uploading a random *_CAP.mp4 video.
     """
+    print("ahh")
+    exit(4)
     # 1. Load the user-provided config
     with open(config_file, "r", encoding="utf-8") as file:
         config = json.load(file)
