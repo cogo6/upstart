@@ -4,7 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6c621c7a-639e-46e4-86a6-3ae672c4e30a" name="Changes" comment="Description update">
+    <list default="true" id="6c621c7a-639e-46e4-86a6-3ae672c4e30a" name="Changes" comment="Uploader Refresh token update">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -154,7 +155,15 @@
       <option name="project" value="LOCAL" />
       <updated>1739097089918</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Uploader Refresh token update">
+      <option name="closed" value="true" />
+      <created>1739097141221</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1739097141221</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -165,6 +174,7 @@
     <MESSAGE value="Requirements update 3" />
     <MESSAGE value="Requirements update 4" />
     <MESSAGE value="Description update" />
-    <option name="LAST_COMMIT_MESSAGE" value="Description update" />
+    <MESSAGE value="Uploader Refresh token update" />
+    <option name="LAST_COMMIT_MESSAGE" value="Uploader Refresh token update" />
   </component>
 </project>

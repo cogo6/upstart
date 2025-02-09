@@ -170,7 +170,7 @@ def upload_to_youtube(video_path, metadata, config):
         },
         "status": {
             "privacyStatus": PRIVACY_STATUS,  # "public", "unlisted", or "private"
-            "madeForKids": False
+            "madeForKids": "false"
         }
     }
 
