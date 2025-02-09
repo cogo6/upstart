@@ -9,6 +9,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from dotenv import load_dotenv
 import urllib.parse
+import datetime
 from datetime import datetime, timezone, timedelta
 
 load_dotenv()
@@ -103,90 +104,97 @@ def get_video_metadata(s3_client, video_key):
 
 def upload_to_youtube(video_path, metadata, config):
     """
-    Uploads a video to YouTube using the provided metadata, plus
-    additional config. Returns the new YouTube video ID.
-    Retries the actual upload if there's a transient connection error.
-
-    YouTube does not accept "scheduled" as a valid privacyStatus.
-    To schedule a future publish time, set the video's status to "private"
-    and include a 'publishAt' field with a future datetime (ISO 8601).
-    YouTube will auto-publish (make public) at that time.
+    Uploads a video to YouTube using refreshed OAuth credentials.
+    If credentials are expired, refreshes them automatically.
+    Only forces a full OAuth re-authentication if the refresh token is missing or invalid.
     """
-    print("Authenticating with YouTube API...")
+    from google.auth.transport.requests import Request
+    from google.oauth2.credentials import Credentials
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    from googleapiclient.discovery import build
+    from googleapiclient.http import MediaFileUpload
+    from datetime import datetime, timezone, timedelta
+    import time
+    import os
 
-    # Grab key fields from config
+    print("🔑 Authenticating with YouTube API...")
+
+    # Load config values
     CREDENTIALS_FILE = config["credentials_file"]
     CLIENT_SECRET_FILE = config["client_secret_file"]
     PRIVACY_STATUS = config["privacy_status"]
     CATEGORY_ID = str(config.get("category_id", 22))
-
-    # Load or create OAuth credentials
     SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+
+    creds = None
+
+    # ✅ Load existing credentials (avoid unnecessary re-authentication)
     if os.path.exists(CREDENTIALS_FILE):
-        credentials = Credentials.from_authorized_user_file(CREDENTIALS_FILE, SCOPES)
-    else:
+        creds = Credentials.from_authorized_user_file(CREDENTIALS_FILE, SCOPES)
+
+    # ✅ Refresh token only if credentials are expired
+    if creds and creds.expired and creds.refresh_token:
+        try:
+            creds.refresh(Request())  # Refreshes token silently
+            print("✅ Token successfully refreshed.")
+        except Exception as e:
+            print(f"⚠️ Token refresh failed: {e}")
+            # Only force re-authentication if there's no valid token at all
+            if not creds.valid:
+                print("🔄 No valid credentials. Re-authenticating...")
+                creds = None
+
+                # ✅ Only run OAuth flow if we have no valid credentials (last resort)
+    if not creds or not creds.valid:
         flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
-        credentials = flow.run_local_server(port=0)
-        with open(CREDENTIALS_FILE, "w", encoding="utf-8") as cred_file:
-            cred_file.write(credentials.to_json())
+        creds = flow.run_local_server(port=0)  # User logs in
 
-    youtube = build("youtube", "v3", credentials=credentials)
+    # ✅ Save refreshed credentials
+    with open(CREDENTIALS_FILE, "w", encoding="utf-8") as token_file:
+        token_file.write(creds.to_json())
 
-    # Prepare snippet from metadata
-    title = metadata.get("ytitle") or metadata.get("title") or "Vid"
+    # ✅ Build YouTube API client
+    youtube = build("youtube", "v3", credentials=creds)
+
+    # Prepare video metadata
+    title = metadata.get("ytitle", metadata.get("title", "Untitled Video"))
     tags = metadata.get("tags", [])
-    description = metadata.get("title", "description")
+    description = metadata.get("summary", "Uploaded via automated script.")
 
     request_body = {
         "snippet": {
-            "title": title[:100],  # enforce 100-char limit
+            "title": title[:100],  # Enforce 100-char limit
             "description": description,
             "tags": tags,
             "categoryId": CATEGORY_ID
         },
         "status": {
-            # Will either be "unlisted", "public", or "private"
-            "privacyStatus": PRIVACY_STATUS,
+            "privacyStatus": PRIVACY_STATUS,  # "public", "unlisted", or "private"
             "madeForKids": False
         }
     }
 
-    # --------------------------------------------------
-    # Scheduling logic if privacy_status is "private"
-    # --------------------------------------------------
-    # If config says "private" AND we have an upload_time + upload_delay_days
-    # we interpret that as wanting a scheduled release (auto-public at future time).
+    # ✅ Handle scheduled uploads if "private"
     if PRIVACY_STATUS == "private":
-        upload_time_str = config.get("upload_time", "10:00")      # e.g. "10:00"
-        upload_delay_str = config.get("upload_delay_days", "0")   # e.g. "3"
+        upload_time_str = config.get("upload_time", "10:00")
+        upload_delay_days = int(config.get("upload_delay_days", "0"))
 
-        # Convert to int
-        delay_days = int(upload_delay_str)
-
-        # Parse hour:minute from "HH:MM"
-        hour_str, minute_str = upload_time_str.split(":")
-        hour = int(hour_str)
-        minute = int(minute_str)
-
-        # Use timezone-aware datetime
         now_utc = datetime.now(timezone.utc)
-        target_date = now_utc + timedelta(days=delay_days)
+        target_date = now_utc + timedelta(days=upload_delay_days)
 
-        # Set the time portion to the desired hour/minute
-        scheduled_datetime = target_date.replace(
-            hour=hour, minute=minute, second=0, microsecond=0
-        )
+        hour, minute = map(int, upload_time_str.split(":"))
+        scheduled_datetime = target_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
 
-        # Convert to ISO8601 (e.g. "2025-01-30T10:00:00+00:00")
         publish_at_iso = scheduled_datetime.isoformat()
 
-        # Keep privacyStatus = "private"
-        # Add publishAt so YouTube auto-publishes it at that future time
         request_body["status"]["privacyStatus"] = "private"
         request_body["status"]["publishAt"] = publish_at_iso
 
-    print(f"Uploading video to YouTube: {request_body['snippet']['title']}")
+        print(f"📅 Video scheduled for: {publish_at_iso}")
 
+    print(f"🎬 Uploading video: {request_body['snippet']['title']}")
+
+    # Upload video file
     media = MediaFileUpload(video_path, chunksize=-1, resumable=True)
     request = youtube.videos().insert(
         part="snippet,status",
@@ -194,23 +202,22 @@ def upload_to_youtube(video_path, metadata, config):
         media_body=media
     )
 
-    # Retry logic around request.execute()
+    # Retry logic for transient failures
     max_attempts = 3
     for attempt in range(1, max_attempts + 1):
         try:
             response = request.execute()
             video_id = response["id"]
-            print(f"Video uploaded successfully with YouTube ID: {video_id}")
+            print(f"✅ Video uploaded successfully: https://youtu.be/{video_id}")
             return video_id
         except Exception as e:
-            print(f"[Attempt {attempt}/{max_attempts}] Error uploading to YouTube: {e}")
+            print(f"⚠️ [Attempt {attempt}/{max_attempts}] Upload error: {e}")
             if attempt == max_attempts:
-                # Exhausted attempts; re-raise
+                print("❌ Maximum retries reached. Upload failed.")
                 raise
-            else:
-                wait_seconds = 5 * attempt
-                print(f"Retrying in {wait_seconds} seconds...\n")
-                time.sleep(wait_seconds)
+            wait_seconds = 5 * attempt
+            print(f"🔄 Retrying in {wait_seconds} seconds...\n")
+            time.sleep(wait_seconds)
 
 def save_upload_info(s3_client, video_key, youtube_id, video_metadata, config):
     """
@@ -339,8 +346,6 @@ def main(config_file):
     """
     Main workflow for processing and uploading a random *_CAP.mp4 video.
     """
-    print("ahh")
-    exit(4)
     # 1. Load the user-provided config
     with open(config_file, "r", encoding="utf-8") as file:
         config = json.load(file)
