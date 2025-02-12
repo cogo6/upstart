@@ -157,9 +157,9 @@ def upload_to_youtube(video_path, metadata, config):
     youtube = build("youtube", "v3", credentials=creds)
 
     # Prepare video metadata
-    title = metadata.get("ytitle", metadata.get("title", "Untitled Video"))
+    title = metadata.get("ytitle", metadata.get("title", "Untitled"))
     tags = metadata.get("tags", [])
-    description = metadata.get("summary", "Uploaded via automated script.")
+    description = metadata.get("title", "desc.")
 
     request_body = {
         "snippet": {
@@ -170,7 +170,7 @@ def upload_to_youtube(video_path, metadata, config):
         },
         "status": {
             "privacyStatus": PRIVACY_STATUS,  # "public", "unlisted", or "private"
-            "madeForKids": "false"
+            "selfDeclaredMadeForKids": False
         }
     }
 
@@ -208,7 +208,7 @@ def upload_to_youtube(video_path, metadata, config):
         try:
             response = request.execute()
             video_id = response["id"]
-            print(f"✅ Video uploaded successfully: https://youtu.be/{video_id}")
+            print(f"✅ Video uploaded ssuccessfully: https://youtu.be/{video_id}")
             return video_id
         except Exception as e:
             print(f"⚠️ [Attempt {attempt}/{max_attempts}] Upload error: {e}")
